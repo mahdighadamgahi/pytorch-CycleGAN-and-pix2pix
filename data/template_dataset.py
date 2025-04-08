@@ -11,15 +11,13 @@ You need to implement the following functions:
     -- <__getitem__>: Return a data point and its metadata information.
     -- <__len__>: Return the number of images.
 """
-# from data.image_folder import make_dataset
-# from PIL import Image
-
 
 import os
 from data.base_dataset import BaseDataset, get_transform
 from PIL import Image
 import random
 import torch
+from torchvision import transforms  # Import transforms from torchvision
 
 class TemplateDataset(BaseDataset):
     """
@@ -39,8 +37,8 @@ class TemplateDataset(BaseDataset):
         self.file_A = os.path.join(opt.dataroot, opt.phase + 'A.pt')  # path to the .pt file for domain A
         self.file_B = os.path.join(opt.dataroot, opt.phase + 'B.pt')  # path to the .pt file for domain B
 
-        self.A_data = torch.load(self.file_A)  # load the dataset for domain A
-        self.B_data = torch.load(self.file_B)  # load the dataset for domain B
+        self.A_data = torch.load(self.file_A,weights_only=False)  # load the dataset for domain A
+        self.B_data = torch.load(self.file_B,weights_only=False)  # load the dataset for domain B
 
         self.A_size = len(self.A_data)  # get the size of dataset A
         self.B_size = len(self.B_data)  # get the size of dataset B
@@ -62,12 +60,16 @@ class TemplateDataset(BaseDataset):
             A_paths (str)    -- image paths (optional if needed)
             B_paths (str)    -- image paths (optional if needed)
         """
-        A_img = self.A_data[index % self.A_size]  # get image from dataset A
+        A_img, _ = self.A_data[index % self.A_size]  # get image from dataset A
         if self.opt.serial_batches:   # make sure index is within the range
             index_B = index % self.B_size
         else:   # randomize the index for domain B to avoid fixed pairs.
             index_B = random.randint(0, self.B_size - 1)
-        B_img = self.B_data[index_B]  # get image from dataset B
+        B_img, _ = self.B_data[index_B]  # get image from dataset B
+
+        # Convert tensors to PIL images
+        A_img = transforms.ToPILImage()(A_img)
+        B_img = transforms.ToPILImage()(B_img)
 
         # apply image transformation
         A = self.transform_A(A_img)
