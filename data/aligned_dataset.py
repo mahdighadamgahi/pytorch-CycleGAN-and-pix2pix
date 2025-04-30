@@ -19,7 +19,7 @@ class AlignedDataset(BaseDataset):
         """
         BaseDataset.__init__(self, opt)
         self.data_path = os.path.join(opt.dataroot, opt.phase + '.pt')  # path to the .pt file
-        self.data = torch.load(self.data_path)  # load the data from the .pt file
+        self.data = torch.load(self.data_path,weights_only=False)  # load the data from the .pt file
 
         assert self.opt.load_size >= self.opt.crop_size, \
             "Crop size should be smaller than or equal to the load size."
